@@ -1,4 +1,5 @@
-import api.pogo.UserData;
+import api.pojo.UserData;
+import api.specifications.Specifications;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -13,10 +14,11 @@ public class ReqresTest {
     private final static String URL = "https://reqres.in/";
 
     @Test
-    public void checkAvatarandIdtest() {
+    public void checkAvatarAndIdTest() {
+        Specifications.installSpecifications(Specifications.requestSpec(URL),Specifications.responseSpecOK200());
         List<UserData> users = given()
                 .when()
-                .contentType(ContentType.JSON)
+//                .contentType(ContentType.JSON)
                 .get(URL + "api/users?page=2")
                 .then().log().all()
                 .extract().body().jsonPath().getList("data", UserData.class);
@@ -31,7 +33,7 @@ public class ReqresTest {
     }
 
     @Test
-    public void singleUser() {
+    public void singleUserTest() {
         given()
                 .when()
                 .contentType(ContentType.JSON)
@@ -39,6 +41,11 @@ public class ReqresTest {
                 .then().log().all()
                 .extract().body().jsonPath().get("data");
 
+    }
+
+    @Test
+    public void successRegisterTest(){
+        Specifications.installSpecifications(Specifications.requestSpec(URL),Specifications.responseSpecOK200());
     }
 
 }
