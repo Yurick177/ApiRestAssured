@@ -1,3 +1,6 @@
+import api.pojo.Register;
+import api.pojo.SuccessRegister;
+import api.pojo.UnSuccessRegister;
 import api.pojo.UserData;
 import api.specifications.Specifications;
 import io.restassured.http.ContentType;
@@ -15,7 +18,7 @@ public class ReqresTest {
 
     @Test
     public void checkAvatarAndIdTest() {
-        Specifications.installSpecifications(Specifications.requestSpec(URL),Specifications.responseSpecOK200());
+        Specifications.installSpecifications(Specifications.requestSpec(URL), Specifications.responseSpecOK200());
         List<UserData> users = given()
                 .when()
 //                .contentType(ContentType.JSON)
@@ -44,8 +47,39 @@ public class ReqresTest {
     }
 
     @Test
-    public void successRegisterTest(){
-        Specifications.installSpecifications(Specifications.requestSpec(URL),Specifications.responseSpecOK200());
+    public void successRegisterTest() {
+        Specifications.installSpecifications(Specifications.requestSpec(URL), Specifications.responseSpecOK200());
+        Integer id = 4;
+        String token = "QpwL5tke4Pnpja7X4";
+        Register register = new Register("eve.holt@reqres.in", "pistol");
+        SuccessRegister successRegister = given()
+                .body(register)
+                .when()
+                .post("api/register")
+                .then().log().all()
+                .extract().as(SuccessRegister.class);
+        Assertions.assertNotNull(successRegister.getId());
+        Assertions.assertNotNull(successRegister.getToken());
+        Assertions.assertEquals(id, successRegister.getId());
+        Assertions.assertEquals(token, successRegister.getToken());
+
+
     }
+
+    @Test
+    public void unSuccessRegisterTest() {
+        Specifications.installSpecifications(Specifications.requestSpec(URL), Specifications.responseSpecError400());
+        Register register = new Register("sydney@fife", "");
+        UnSuccessRegister unSuccessRegister = given()
+                .body(register)
+                .when()
+                .post("api/register")
+                .then().log().all()
+                .extract().as(UnSuccessRegister.class);
+        Assertions.assertEquals("Missing password", unSuccessRegister.getError());
+
+
+    }
+
 
 }
