@@ -1,12 +1,10 @@
-import api.pojo.Register;
-import api.pojo.SuccessRegister;
-import api.pojo.UnSuccessRegister;
-import api.pojo.UserData;
+import api.pojo.*;
 import api.specifications.Specifications;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +46,7 @@ public class ReqresTest {
 
     @Test
     public void successRegisterTest() {
-        Specifications.installSpecifications(Specifications.requestSpec(URL), Specifications.responseSpecOK200());
+        Specifications.installSpecifications(Specifications.requestSpec(URL), Specifications.responseSpecUnique(204));
         Integer id = 4;
         String token = "QpwL5tke4Pnpja7X4";
         Register register = new Register("eve.holt@reqres.in", "pistol");
@@ -78,8 +76,47 @@ public class ReqresTest {
                 .extract().as(UnSuccessRegister.class);
         Assertions.assertEquals("Missing password", unSuccessRegister.getError());
 
+    }
+
+    @Test
+    public void sortedYearsTest() {
+        Specifications.installSpecifications(Specifications.requestSpec(URL), Specifications.responseSpecOK200());
+        List<ColorsData> colorsData = given()
+                .when()
+                .get("api/unknown")
+                .then().log().all()
+                .extract().body().jsonPath().getList("data", ColorsData.class);
+        List<Integer> years = colorsData.stream().map(ColorsData::getYear).collect(Collectors.toList());
+        List<Integer> yearsSort = years.stream().sorted().collect(Collectors.toList());
+        Assertions.assertEquals(yearsSort, years);
+    }
+
+    @Test
+    public void deleteUserTest() {
+        Specifications.installSpecifications(Specifications.requestSpec(URL), Specifications.responseSpecUnique(204));
+        given()
+                .when()
+                .delete("api/users/2")
+                .then().log().all();
 
     }
 
+    @Test
+    public void timeTest() {
+        Specifications.installSpecifications(Specifications.requestSpec(URL), Specifications.responseSpecUnique(200));
+        Time time = new Time("morpheus", "zion resident");
+        TimeResponse timeResponse = given()
+                .body(time)
+                .when()
+                .put("api/users/2")
+                .then().log().all()
+                .extract().as(TimeResponse.class);
+
+        String regex = "(.{5})$";
+        String currentTime = Clock.systemUTC().instant().toString().replaceAll(regex, "");
+        System.out.println(currentTime);
+        Assertions.assertEquals(currentTime, timeResponse.getUpdatedAt().replaceAll(regex, ""));
+        System.out.println(timeResponse.getUpdatedAt().replaceAll(regex, ""));
+    }
 
 }
